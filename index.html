@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#065f46" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Iuran Kok Badminton - GAI Cibubur</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Layar Kunci PIN Bendahara -->
+  <div id="pinLockScreen" class="pin-overlay">
+    <div class="pin-card">
+      <div class="pin-icon">🔒</div>
+      <h2>Akses Khusus Bendahara</h2>
+      <p class="pin-subtitle">Klub Badminton GAI Cibubur</p>
+      <form id="formPinLogin" class="pin-form">
+        <input
+          type="password"
+          id="pinInput"
+          inputmode="numeric"
+          maxlength="12"
+          placeholder="Masukkan PIN Bendahara"
+          autocomplete="off"
+          required
+        />
+        <label class="pin-remember">
+          <input type="checkbox" id="pinRemember" checked />
+          <span>Ingat perangkat ini (tidak perlu ketik ulang)</span>
+        </label>
+        <p id="pinErrorMsg" class="pin-error" hidden>PIN yang Anda masukkan salah!</p>
+        <button type="submit" class="btn-pin-submit">Buka Aplikasi</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Ubah PIN -->
+  <div id="pinChangeModal" class="pin-overlay" hidden>
+    <div class="pin-card">
+      <div class="pin-icon">🔑</div>
+      <h2>Pengaturan PIN Bendahara</h2>
+      <p class="pin-subtitle">Ubah PIN akses atau kunci layar saat ini</p>
+      <form id="formPinChange" class="pin-form">
+        <input
+          type="password"
+          id="oldPinInput"
+          inputmode="numeric"
+          placeholder="PIN Saat Ini"
+          autocomplete="off"
+          required
+        />
+        <input
+          type="password"
+          id="newPinInput"
+          inputmode="numeric"
+          placeholder="PIN Baru (min. 4 angka)"
+          autocomplete="off"
+          required
+        />
+        <div class="pin-modal-actions">
+          <button type="button" id="btnCancelChangePin" class="btn-secondary">Batal</button>
+          <button type="submit" class="btn-pin-submit">Simpan PIN</button>
+        </div>
+      </form>
+      <hr class="pin-divider" />
+      <button type="button" id="btnLockNow" class="btn-lock-now">🔒 Kunci Aplikasi Sekarang</button>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-top">
+        <div class="brand">
+          <div class="brand-icon" aria-hidden="true">🏸</div>
+          <div>
+            <span class="badge">LAPORAN KAS &amp; IURAN</span>
+            <h1 id="headerClubTitle">Klub Badminton GAI Cibubur</h1>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button type="button" id="btnOpenPinModal" class="btn-icon-outline" title="Pengaturan PIN / Kunci">
+            🔒 PIN
+          </button>
+          <button type="button" id="btnResetSession" class="btn-icon-outline" title="Mulai Sesi Baru">
+            🔄 Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Summary Sticky Card -->
+      <div class="summary-bar">
+        <div class="summary-item">
+          <span class="summary-label">Saldo Awal</span>
+          <strong class="summary-val" id="sumPrev">Rp 0</strong>
+        </div>
+        <div class="summary-divider">+</div>
+        <div class="summary-item income">
+          <span class="summary-label">Pemasukan</span>
+          <strong class="summary-val" id="sumIncome">Rp 0</strong>
+        </div>
+        <div class="summary-divider">-</div>
+        <div class="summary-item expense">
+          <span class="summary-label">Pengeluaran</span>
+          <strong class="summary-val" id="sumExpense">Rp 0</strong>
+        </div>
+        <div class="summary-divider">=</div>
+        <div class="summary-item total">
+          <span class="summary-label">Saldo Akhir</span>
+          <strong class="summary-val" id="sumFinal">Rp 0</strong>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Form Content -->
+    <main class="app-content">
+      <!-- Section 1: Info Dasar & Saldo -->
+      <section class="card">
+        <div class="card-header">
+          <h2>1. Informasi &amp; Saldo Awal</h2>
+          <button type="button" id="btnApplyFinalToPrev" class="btn-chip" title="Jadikan Saldo Akhir sebagai Saldo Sebelumnya">
+            ⚡ Pakai Saldo Akhir Jadi Saldo Awal
+          </button>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="clubName">Nama Klub Badminton</label>
+            <input type="text" id="clubName" placeholder="Klub Badminton GAI Cibubur" />
+          </div>
+
+          <div class="form-group full">
+            <label for="prevBalance">Saldo Sebelumnya (Rp)</label>
+            <div class="input-currency">
+              <span class="prefix">Rp</span>
+              <input type="text" id="prevBalance" inputmode="numeric" placeholder="406.770" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="sessionDate">Tanggal Iuran / Main</label>
+            <input type="date" id="sessionDate" />
+          </div>
+
+          <div class="form-group">
+            <label for="reportDate">Tanggal Saldo Saat Ini</label>
+            <input type="date" id="reportDate" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Daftar Anggota & Iuran -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>2. Pemasukan Iuran Kok</h2>
+            <p class="card-subtitle">Klik nominal pada anggota yang hadir &amp; bayar iuran</p>
+          </div>
+          <span class="counter-pill" id="paidCountBadge">0 hadir</span>
+        </div>
+
+        <!-- Add Member Bar -->
+        <form id="formAddMember" class="add-row-form">
+          <input type="text" id="newMemberName" placeholder="Tambah nama anggota baru..." autocomplete="off" />
+          <button type="submit" class="btn-add">+ Anggota</button>
+        </form>
+
+        <!-- Bulk Quick Actions -->
+        <div class="bulk-toolbar">
+          <span class="bulk-label">Filter / Set Cepat:</span>
+          <div class="bulk-actions">
+            <button type="button" id="btnClearAllPaid" class="btn-text-danger">Reset Semua Iuran (0)</button>
+          </div>
+        </div>
+
+        <!-- Members List -->
+        <div id="memberList" class="member-list"></div>
+
+        <div class="section-footer">
+          <span>Total Pemasukan (<span id="lblIncomeDate">-</span>)</span>
+          <strong class="text-income" id="lblTotalIncome">Rp 0</strong>
+        </div>
+      </section>
+
+      <!-- Section 3: Pengeluaran -->
+      <section class="card">
+        <div class="card-header">
+          <div>
+            <h2>3. Pengeluaran</h2>
+            <p class="card-subtitle">Kok, sewa lapangan, air minum, dll.</p>
+          </div>
+          <button type="button" id="btnAddExpense" class="btn-chip">+ Tambah Item</button>
+        </div>
+
+        <!-- Quick Expense Presets -->
+        <div class="preset-chips">
+          <span class="preset-title">Tambah Cepat:</span>
+          <button type="button" class="chip-preset" data-name="Kok prowan 1 slop" data-amount="125000">+ Kok 1 Slop (125rb)</button>
+          <button type="button" class="chip-preset" data-name="Kok 2 slop" data-amount="250000">+ Kok 2 Slop (250rb)</button>
+          <button type="button" class="chip-preset" data-name="Sewa lapangan" data-amount="100000">+ Lapangan</button>
+          <button type="button" class="chip-preset" data-name="Air minum / Aqua" data-amount="25000">+ Air Minum</button>
+        </div>
+
+        <div id="expenseList" class="expense-list"></div>
+
+        <div class="section-footer">
+          <span>Total Pengeluaran</span>
+          <strong class="text-expense" id="lblTotalExpense">Rp 0</strong>
+        </div>
+      </section>
+
+      <!-- Section 4: Catatan Penutup & Preview -->
+      <section class="card preview-card">
+        <div class="card-header">
+          <div>
+            <h2>4. Preview Laporan WhatsApp</h2>
+            <p class="card-subtitle">Oomatis diformat tebal (*bold*) sesuai format WA</p>
+          </div>
+          <button type="button" id="btnCopyTop" class="btn-chip">📋 Salin Teks</button>
+        </div>
+
+        <div class="form-group full" style="margin-bottom: 12px;">
+          <label for="closingNote">Kalimat Penutup</label>
+          <input type="text" id="closingNote" placeholder="Alhamdulillah..." />
+        </div>
+
+        <div class="wa-preview-box">
+          <div class="wa-bubble">
+            <pre id="waPreviewText"></pre>
+            <div class="wa-time">Siap kirim ke Grup WA ✓✓</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Sticky Action Bar -->
+    <footer class="bottom-bar">
+      <button type="button" id="btnCopyReport" class="btn-secondary">
+        <span>📋</span> Salin
+      </button>
+      <button type="button" id="btnShareNative" class="btn-secondary">
+        <span>📤</span> Share...
+      </button>
+      <button type="button" id="btnShareWA" class="btn-whatsapp">
+        <svg class="wa-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+          <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12 0 2.126.556 4.124 1.535 5.86L0 24l6.335-1.652c1.694.922 3.633 1.448 5.696 1.448 6.627 0 12-5.373 12-12 0-6.627-5.373-12-12.031-12z"/>
+        </svg>
+        Kirim ke Grup WA
+      </button>
+    </footer>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
